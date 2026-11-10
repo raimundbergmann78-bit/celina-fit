@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Celina Fit</title>
+<meta name="description" content="Trainingsplan für Celina">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1f2a44">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Celina Fit">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="splash">
+  <img src="icons/splash.jpg" alt="">
+  <div class="splash-text">
+    <h1>Celina Fit</h1>
+    <p>Tippen zum Starten</p>
+  </div>
+</div>
+
+<header id="top">
+  <div class="top-title" id="topTitle">Heute</div>
+  <div class="top-sub" id="topSub"></div>
+</header>
+
+<main id="view"></main>
+
+<div id="restbar" hidden>
+  <div class="rest-label">Pause</div>
+  <div class="rest-time" id="restTime">60</div>
+  <button class="btn small" id="restSkip">Weiter</button>
+</div>
+
+<nav id="nav">
+  <button data-view="heute" class="active"><span class="ico">🏋️</span>Heute</button>
+  <button data-view="woche"><span class="ico">📅</span>Woche</button>
+  <button data-view="gewicht"><span class="ico">⚖️</span>Gewicht</button>
+  <button data-view="verlauf"><span class="ico">📈</span>Verlauf</button>
+  <button data-view="einstellungen"><span class="ico">⚙️</span>Mehr</button>
+</nav>
+
+<div id="modal" hidden>
+  <div class="modal-box" id="modalBox"></div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
