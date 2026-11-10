@@ -78,11 +78,11 @@ function render() {
   clearTimers();
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
   const v = $('#view'); v.innerHTML = '';
-  ({ heute: renderHeute, woche: renderWoche, gewicht: renderGewicht, verlauf: renderVerlauf, einstellungen: renderEinst })[view](v);
+  ({ heute: renderHeute, woche: renderWoche, essen: renderEssen, gewicht: renderGewicht, verlauf: renderVerlauf, einstellungen: renderEinst })[view](v);
   updateSyncBadge();
   window.scrollTo(0, 0);
 }
-document.querySelectorAll('#nav button').forEach(b => b.onclick = () => { view = b.dataset.view; if (view === 'heute') selDate = today(); render(); });
+document.querySelectorAll('#nav button').forEach(b => b.onclick = () => { view = b.dataset.view; if (view === 'heute') selDate = today(); if (view === 'essen') { essenDate = today(); essenOpen = {}; } render(); });
 
 // ----- Heute -----
 function renderHeute(v) {
@@ -299,6 +299,8 @@ function renderVerlauf(v) {
   v.appendChild(h(`<h3 style="margin:4px 0 8px;color:#ff8c1a;font-size:12px;letter-spacing:2px;text-transform:uppercase">Diese Woche</h3>`));
   v.appendChild(h(`<div class="stat"><div><b>${wk.length}</b><span>Einheiten</span></div><div><b>${sum(wk, 'min')}</b><span>Minuten</span></div><div><b>${sum(wk, 'kcal')}</b><span>kcal</span></div></div>`));
   v.appendChild(h(`<div class="stat" style="margin-top:10px"><div><b>${kmf(CF.sumKm(wk, 'swim'))}</b><span>km Schwimmen</span></div><div><b>${kmf(CF.sumKm(wk, 'step'))}</b><span>km Cardio</span></div></div>`));
+  const mon = mondayOf(today()); let essenW = 0; for (let i = 0; i < 7; i++) essenW += gegessenKcal(addDays(mon, i));
+  v.appendChild(h(`<div class="stat" style="margin-top:10px"><div><b>${essenW}</b><span>kcal gegessen</span></div><div><b>${ESSEN.ziel * 7}</b><span>kcal Ziel Woche</span></div></div>`));
   v.appendChild(h(`<h3 style="margin:14px 0 8px;color:#ff8c1a;font-size:12px;letter-spacing:2px;text-transform:uppercase">Gesamt</h3>`));
   v.appendChild(h(`<div class="stat"><div><b>${all.length}</b><span>Einheiten</span></div><div><b>${Math.round(sum(all, 'min') / 60 * 10) / 10}</b><span>Stunden</span></div><div><b>${sum(all, 'kcal')}</b><span>kcal</span></div></div>`));
   v.appendChild(h(`<div class="stat" style="margin-top:10px"><div><b>${kmf(CF.sumKm(all, 'swim'))}</b><span>km Schwimmen</span></div><div><b>${kmf(CF.sumKm(all, 'step'))}</b><span>km Cardio</span></div></div>`));
@@ -311,6 +313,52 @@ function renderVerlauf(v) {
     list.appendChild(h(`<div class="list-item"><span>${esc(x.name)}<small>${esc(detail)}</small></span><span>${x.min} min<small>${x.kcal} kcal</small></span></div>`));
   });
   v.appendChild(list);
+}
+
+// ----- Essen (14-Tage-Plan, ca. 2000 kcal) -----
+let essenDate = today(), essenOpen = {};
+const essenTag = s => CF.essenTag(S.startDate, s);
+function rezeptKcal(id) { return (ESSEN.rezepte[id] || { kcal: 0 }).kcal; }
+function gegessenKcal(s) { const ids = ESSEN.plan[essenTag(s)], e = S.essen[s] || {}; return ids.reduce((a, id, i) => a + (e[i] ? rezeptKcal(id) : 0), 0); }
+function menge(m, e) { const t = (Math.round(m * 10) / 10).toString().replace('.', ','); return (m === 0.5 ? '½' : t) + ' ' + e; }
+function renderEssen(v) {
+  const s = essenDate, tag = essenTag(s), ids = ESSEN.plan[tag], eaten = S.essen[s] || {};
+  const total = ids.reduce((a, id) => a + rezeptKcal(id), 0), got = gegessenKcal(s);
+  setTop('Essen', 'Tag ' + (tag + 1) + ' von 14 · Ziel ca. ' + ESSEN.ziel + ' kcal');
+  const nav = h(`<div class="weeknav"><button class="btn light small">‹</button><b>${fmtLong(s)}</b><button class="btn light small">›</button></div>`);
+  const [p, n] = nav.querySelectorAll('button');
+  p.onclick = () => { essenDate = addDays(s, -1); essenOpen = {}; render(); }; n.onclick = () => { essenDate = addDays(s, 1); essenOpen = {}; render(); };
+  v.appendChild(nav);
+  v.appendChild(h(`<div class="stat"><div><b>${total}</b><span>kcal geplant</span></div><div><b>${got}</b><span>kcal gegessen</span></div><div><b>${Math.max(0, ESSEN.ziel - got)}</b><span>noch frei</span></div></div>`));
+  ids.forEach((id, i) => {
+    const r = ESSEN.rezepte[id], open = !!essenOpen[i], done = !!eaten[i];
+    const card = h(`<div class="card meal ${done ? 'done' : ''}"><div class="meal-head"><div><div class="meal-label">${esc(ESSEN.labels[i])}</div><div class="meal-name">${esc(r.name)}</div><div class="sub">${r.kcal} kcal · ${r.zeit} min</div></div><button class="set meal-check ${done ? 'on' : ''}">${done ? '✓ Gegessen' : 'Gegessen?'}</button></div></div>`);
+    card.querySelector('.meal-check').onclick = () => { const e = S.essen[s] || (S.essen[s] = {}); e[i] = !e[i]; save(); render(); };
+    const btn = h(`<button class="btn light small" style="margin-top:10px">${open ? 'Rezept schließen' : 'Rezept anzeigen'}</button>`);
+    btn.onclick = () => { essenOpen[i] = !open; render(); };
+    card.appendChild(btn);
+    if (open) {
+      card.appendChild(h(`<h3>Zutaten</h3>`));
+      const ul = h(`<div></div>`);
+      r.zutaten.forEach(z => ul.appendChild(h(`<div class="list-item"><span>${esc(z[0])}</span><span>${menge(z[1], z[2])}</span></div>`)));
+      card.appendChild(ul);
+      card.appendChild(h(`<h3>Zubereitung</h3>`));
+      const ol = h(`<ol class="schritte"></ol>`); r.schritte.forEach(t => ol.appendChild(h(`<li>${esc(t)}</li>`))); card.appendChild(ol);
+      if (r.tipp) card.appendChild(h(`<div class="hint">💡 ${esc(r.tipp)}</div>`));
+    }
+    v.appendChild(card);
+  });
+  const shop = h(`<button class="btn light">Einkaufsliste für diese Woche</button>`); shop.onclick = () => einkaufsliste(s); v.appendChild(shop);
+  if (s !== today()) { const b = h(`<button class="btn light" style="margin-top:10px">Zu heute</button>`); b.onclick = () => { essenDate = today(); essenOpen = {}; render(); }; v.appendChild(b); }
+}
+function einkaufsliste(s) {
+  const mon = mondayOf(s), sum = {};
+  for (let i = 0; i < 7; i++) {
+    ESSEN.plan[essenTag(addDays(mon, i))].forEach(id => ESSEN.rezepte[id].zutaten.forEach(z => { if (z[2] === 'Prise') return; const k = z[0] + '|' + z[2]; sum[k] = (sum[k] || 0) + z[1]; }));
+  }
+  const rows = Object.keys(sum).sort((a, b) => a.localeCompare(b, 'de')).map(k => { const [n, e] = k.split('|'); return `<div class="list-item"><span>${esc(n)}</span><span>${menge(sum[k], e)}</span></div>`; }).join('');
+  openModal(`<h2>Einkaufsliste</h2><div class="sub">${fmt(mon)} – ${fmt(addDays(mon, 6))} · alle Mahlzeiten der Woche, 1 Person</div><div style="margin-top:10px;max-height:60vh;overflow:auto">${rows}</div><button class="btn light" id="elClose" style="margin-top:14px">Schließen</button>`);
+  $('#elClose').onclick = closeModal;
 }
 
 // ----- Einstellungen -----

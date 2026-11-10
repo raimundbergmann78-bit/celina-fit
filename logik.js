@@ -116,7 +116,7 @@ const DAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 const DAYS_LONG = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
 
 const DEFAULT = { name: 'Celina', startDate: null, swimMin: 60, stepStart: 30, stepPlus: 5, stepMax: 60,
-  holdWeeks: [], weights: [], sessions: [], checks: {}, overrides: {}, gear: {}, cardioDev: {}, lastDev: 'step', updatedAt: 0 };
+  holdWeeks: [], weights: [], sessions: [], checks: {}, overrides: {}, gear: {}, cardioDev: {}, lastDev: 'step', essen: {}, updatedAt: 0 };
 
 // ---------- Datum ----------
 function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
@@ -151,11 +151,13 @@ function kcalEst(kg, type, min, dev) {
   const met = (type === 'step' && DEVICES[dev]) ? DEVICES[dev].met : (MET[type] || 4.0);
   return Math.round(met * (kg || 70) * min / 60);
 }
+// Essensplan: Tag 0–13 im 14-Tage-Plan (Woche A = Tag 1–7, Woche B = Tag 8–14)
+function essenTag(startDate, s) { const w = weekNo(startDate, s); if (w < 1) return 0; return ((w - 1) * 7 + wdIdx(s)) % 14; }
 // Sicherung: neuerer Stand gewinnt
 function newerState(a, b) { return ((b && b.updatedAt) || 0) > ((a && a.updatedAt) || 0) ? b : a; }
 function sumKm(sessions, type) { return Math.round(sessions.filter(x => x.type === type).reduce((a, x) => a + (x.km || 0), 0) * 10) / 10; }
 
 root.CF = { MET, DEVICES, WORKOUTS, SPECIAL, PLAN_A, PLAN_B, DAYS, DAYS_LONG, DEFAULT,
   iso, fromIso, addDays, wdIdx, mondayOf, fmt, fmtLong, weekNo, planLetter, planKey, infoOf, imgOf, gearOf, stepMinutes, devOf,
-  sessionOf, lastWeight, weightThisWeek, kcalEst, newerState, sumKm };
+  sessionOf, lastWeight, weightThisWeek, kcalEst, newerState, sumKm, essenTag };
 })(typeof module !== 'undefined' && module.exports ? module.exports : window);

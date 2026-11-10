@@ -159,3 +159,13 @@ textarea { font-size: 12px; height: 110px; font-family: monospace; }
 .stat span { font-size: 11px; color: var(--blue); text-transform: uppercase; letter-spacing: 1px; }
 svg.chart { width: 100%; height: 170px; display: block; }
 img.poster { width: 100%; border-radius: 12px; margin-top: 10px; border: 1px solid var(--blue-dim); }
+
+/* Essen */
+.meal-head { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+.meal-label { font-size: 11px; color: var(--blue); text-transform: uppercase; letter-spacing: 2px; }
+.meal-name { font-weight: 800; font-size: 17px; text-transform: uppercase; letter-spacing: .5px; text-shadow: var(--glow-g); margin: 2px 0; }
+.meal-check { flex: 0 0 auto; min-width: 104px; font-size: 13px; padding: 10px 8px; }
+.card.meal.done { border-color: var(--green); box-shadow: 0 0 14px rgba(0, 229, 255, 0.3); }
+.schritte { padding-left: 20px; margin: 0; color: var(--green-dim); font-size: 14px; line-height: 1.45; }
+.schritte li { margin-bottom: 6px; }
+#nav button { font-size: 9px; letter-spacing: .5px; }
