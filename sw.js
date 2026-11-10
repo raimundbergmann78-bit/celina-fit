@@ -1,7 +1,7 @@
 /* Service Worker: macht die App offline nutzbar.
    Mit Internet: immer die neueste Datei laden (Updates kommen automatisch).
    Ohne Internet: aus dem Zwischenspeicher. */
-const CACHE = 'celinafit-v2';
+const CACHE = 'celinafit-v3';
 const FILES = [
   './', './index.html', './style.css', './logik.js', './app.js', './manifest.webmanifest',
   './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png', './icons/splash.jpg',
@@ -20,8 +20,10 @@ self.addEventListener('activate', e => {
 });
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
+  // Immer beim Server nachfragen, ob es eine neuere Datei gibt (sonst haelt der Browser-Cache alte Dateien fest)
+  const anfrage = e.request.mode === 'navigate' ? fetch(e.request) : fetch(e.request, { cache: 'no-cache' });
   e.respondWith(
-    fetch(e.request).then(res => {
+    anfrage.then(res => {
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); }
       return res;
     }).catch(() => caches.match(e.request).then(hit => hit || caches.match('./index.html')))
