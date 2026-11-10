@@ -43,11 +43,11 @@ let timers = [], lastTap = 0;
 function clearTimers() { timers.forEach(clearInterval); timers = []; }
 
 const ICONS = {
-  swim: `<svg viewBox="0 0 120 90" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="80" cy="28" r="8" stroke="#39ff14"/><path d="M28 50c10-14 22-18 34-13l12 9M50 44l-8 12" stroke="#39ff14"/><path d="M6 64c8-8 16-8 24 0s16 8 24 0 16-8 24 0 16 8 24 0" stroke="#00e5ff"/><path d="M6 78c8-8 16-8 24 0s16 8 24 0 16-8 24 0 16 8 24 0" stroke="#00e5ff" opacity=".55"/></svg>`,
-  step: `<svg viewBox="0 0 120 90" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 80h24V60h24V40h24V20h26" stroke="#00e5ff"/><circle cx="64" cy="20" r="7" stroke="#39ff14"/><path d="M64 27v20l-11 15M64 47l10 11M64 33l13 4M64 33l-13 8" stroke="#39ff14"/></svg>`,
-  lauf: `<svg viewBox="0 0 120 90" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 72h80M18 72l-7 10h90l-7-10M90 72V26h12" stroke="#00e5ff"/><circle cx="50" cy="24" r="7" stroke="#39ff14"/><path d="M50 31v18l-10 17M50 49l11 15M50 37l13-4M50 37l-13 9" stroke="#39ff14"/></svg>`,
-  rad: `<svg viewBox="0 0 120 90" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="26" cy="66" r="16" stroke="#00e5ff"/><circle cx="94" cy="66" r="16" stroke="#00e5ff"/><path d="M26 66l20-30h24l24 30M46 36h-12M70 36l-6-14h10M60 66l-14-30M60 66h-16" stroke="#00e5ff"/><circle cx="60" cy="66" r="4" stroke="#39ff14"/><circle cx="66" cy="14" r="5" stroke="#39ff14"/></svg>`,
-  rest: `<svg viewBox="0 0 120 90" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M72 12a30 30 0 1 0 30 38A24 24 0 0 1 72 12z" stroke="#39ff14"/><path d="M24 18l2 6 6 2-6 2-2 6-2-6-6-2 6-2zM32 58l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" stroke="#00e5ff"/></svg>`
+  swim: `<svg viewBox="0 0 120 90" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="80" cy="28" r="8" stroke="#00e5ff"/><path d="M28 50c10-14 22-18 34-13l12 9M50 44l-8 12" stroke="#00e5ff"/><path d="M6 64c8-8 16-8 24 0s16 8 24 0 16-8 24 0 16 8 24 0" stroke="#ff8c1a"/><path d="M6 78c8-8 16-8 24 0s16 8 24 0 16-8 24 0 16 8 24 0" stroke="#ff8c1a" opacity=".55"/></svg>`,
+  step: `<svg viewBox="0 0 120 90" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 80h24V60h24V40h24V20h26" stroke="#ff8c1a"/><circle cx="64" cy="20" r="7" stroke="#00e5ff"/><path d="M64 27v20l-11 15M64 47l10 11M64 33l13 4M64 33l-13 8" stroke="#00e5ff"/></svg>`,
+  lauf: `<svg viewBox="0 0 120 90" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 72h80M18 72l-7 10h90l-7-10M90 72V26h12" stroke="#ff8c1a"/><circle cx="50" cy="24" r="7" stroke="#00e5ff"/><path d="M50 31v18l-10 17M50 49l11 15M50 37l13-4M50 37l-13 9" stroke="#00e5ff"/></svg>`,
+  rad: `<svg viewBox="0 0 120 90" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="26" cy="66" r="16" stroke="#ff8c1a"/><circle cx="94" cy="66" r="16" stroke="#ff8c1a"/><path d="M26 66l20-30h24l24 30M46 36h-12M70 36l-6-14h10M60 66l-14-30M60 66h-16" stroke="#ff8c1a"/><circle cx="60" cy="66" r="4" stroke="#00e5ff"/><circle cx="66" cy="14" r="5" stroke="#00e5ff"/></svg>`,
+  rest: `<svg viewBox="0 0 120 90" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M72 12a30 30 0 1 0 30 38A24 24 0 0 1 72 12z" stroke="#00e5ff"/><path d="M24 18l2 6 6 2-6 2-2 6-2-6-6-2 6-2zM32 58l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" stroke="#ff8c1a"/></svg>`
 };
 
 // ---------- Pause ----------
@@ -285,10 +285,10 @@ function chart(vals, labels) {
   const x = i => pl + i * (W - pl - pr) / (vals.length - 1), y = val => pt + (max - val) * (H - pt - pb) / (max - min);
   const pts = vals.map((val, i) => x(i) + ',' + y(val)).join(' ');
   let g = '';
-  for (let k = 0; k <= 3; k++) { const val = min + (max - min) * k / 3; g += `<line x1="${pl}" x2="${W - pr}" y1="${y(val)}" y2="${y(val)}" stroke="rgba(0,229,255,.3)"/><text x="${pl - 4}" y="${y(val) + 4}" font-size="10" fill="#00e5ff" text-anchor="end">${val.toFixed(1)}</text>`; }
-  const lab = labels.map((l, i) => (i === 0 || i === labels.length - 1 || labels.length <= 6) ? `<text x="${x(i)}" y="${H - 8}" font-size="10" fill="rgba(57,255,20,.8)" text-anchor="middle">${l}</text>` : '').join('');
-  const dots = vals.map((val, i) => `<circle cx="${x(i)}" cy="${y(val)}" r="4" fill="#00e5ff" stroke="#000" stroke-width="1.5"/>`).join('');
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}"><defs><filter id="gl"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${g}<polyline points="${pts}" fill="none" stroke="#39ff14" stroke-width="2.5" stroke-linejoin="round" filter="url(#gl)"/>${dots}${lab}</svg>`;
+  for (let k = 0; k <= 3; k++) { const val = min + (max - min) * k / 3; g += `<line x1="${pl}" x2="${W - pr}" y1="${y(val)}" y2="${y(val)}" stroke="rgba(255,140,26,.3)"/><text x="${pl - 4}" y="${y(val) + 4}" font-size="10" fill="#ff8c1a" text-anchor="end">${val.toFixed(1)}</text>`; }
+  const lab = labels.map((l, i) => (i === 0 || i === labels.length - 1 || labels.length <= 6) ? `<text x="${x(i)}" y="${H - 8}" font-size="10" fill="rgba(0,229,255,.8)" text-anchor="middle">${l}</text>` : '').join('');
+  const dots = vals.map((val, i) => `<circle cx="${x(i)}" cy="${y(val)}" r="4" fill="#ff8c1a" stroke="#000" stroke-width="1.5"/>`).join('');
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}"><defs><filter id="gl"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${g}<polyline points="${pts}" fill="none" stroke="#00e5ff" stroke-width="2.5" stroke-linejoin="round" filter="url(#gl)"/>${dots}${lab}</svg>`;
 }
 
 // ----- Verlauf -----
@@ -296,10 +296,10 @@ function renderVerlauf(v) {
   setTop('Verlauf', 'Seit ' + fmt(S.startDate) + ' · Woche ' + weekNo(today()));
   const w = weekNo(today()), wk = S.sessions.filter(x => weekNo(x.planDate) === w), all = S.sessions;
   const sum = (arr, f) => arr.reduce((a, x) => a + (x[f] || 0), 0), kmf = n => String(n).replace('.', ',');
-  v.appendChild(h(`<h3 style="margin:4px 0 8px;color:#00e5ff;font-size:12px;letter-spacing:2px;text-transform:uppercase">Diese Woche</h3>`));
+  v.appendChild(h(`<h3 style="margin:4px 0 8px;color:#ff8c1a;font-size:12px;letter-spacing:2px;text-transform:uppercase">Diese Woche</h3>`));
   v.appendChild(h(`<div class="stat"><div><b>${wk.length}</b><span>Einheiten</span></div><div><b>${sum(wk, 'min')}</b><span>Minuten</span></div><div><b>${sum(wk, 'kcal')}</b><span>kcal</span></div></div>`));
   v.appendChild(h(`<div class="stat" style="margin-top:10px"><div><b>${kmf(CF.sumKm(wk, 'swim'))}</b><span>km Schwimmen</span></div><div><b>${kmf(CF.sumKm(wk, 'step'))}</b><span>km Cardio</span></div></div>`));
-  v.appendChild(h(`<h3 style="margin:14px 0 8px;color:#00e5ff;font-size:12px;letter-spacing:2px;text-transform:uppercase">Gesamt</h3>`));
+  v.appendChild(h(`<h3 style="margin:14px 0 8px;color:#ff8c1a;font-size:12px;letter-spacing:2px;text-transform:uppercase">Gesamt</h3>`));
   v.appendChild(h(`<div class="stat"><div><b>${all.length}</b><span>Einheiten</span></div><div><b>${Math.round(sum(all, 'min') / 60 * 10) / 10}</b><span>Stunden</span></div><div><b>${sum(all, 'kcal')}</b><span>kcal</span></div></div>`));
   v.appendChild(h(`<div class="stat" style="margin-top:10px"><div><b>${kmf(CF.sumKm(all, 'swim'))}</b><span>km Schwimmen</span></div><div><b>${kmf(CF.sumKm(all, 'step'))}</b><span>km Cardio</span></div></div>`));
   const steps = all.filter(x => x.type === 'step');
