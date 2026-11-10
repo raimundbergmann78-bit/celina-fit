@@ -6,7 +6,8 @@
 <title>Celina Fit</title>
 <meta name="description" content="Trainingsplan für Celina">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#1f2a44">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,8 +18,11 @@
 </head>
 <body>
 
+<div class="stripe s1"></div><div class="stripe s2"></div><div class="stripe s3"></div>
+
 <div id="splash">
   <img src="icons/splash.jpg" alt="">
+  <div class="stripe s1"></div><div class="stripe s3"></div>
   <div class="splash-text">
     <h1>Celina Fit</h1>
     <p>Tippen zum Starten</p>
@@ -28,6 +32,7 @@
 <header id="top">
   <div class="top-title" id="topTitle">Heute</div>
   <div class="top-sub" id="topSub"></div>
+  <div class="top-badge" id="syncBadge" hidden></div>
 </header>
 
 <main id="view"></main>
@@ -39,17 +44,18 @@
 </div>
 
 <nav id="nav">
-  <button data-view="heute" class="active"><span class="ico">🏋️</span>Heute</button>
-  <button data-view="woche"><span class="ico">📅</span>Woche</button>
-  <button data-view="gewicht"><span class="ico">⚖️</span>Gewicht</button>
-  <button data-view="verlauf"><span class="ico">📈</span>Verlauf</button>
-  <button data-view="einstellungen"><span class="ico">⚙️</span>Mehr</button>
+  <button data-view="heute" class="active"><svg viewBox="0 0 24 24"><path d="M3 10v4M6 8v8M18 8v8M21 10v4M6 12h12"/></svg>Heute</button>
+  <button data-view="woche"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Woche</button>
+  <button data-view="gewicht"><svg viewBox="0 0 24 24"><path d="M4 7h16l-2 13H6L4 7zM12 7V4M9 12a3 3 0 0 0 6 0"/></svg>Gewicht</button>
+  <button data-view="verlauf"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>Verlauf</button>
+  <button data-view="einstellungen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Mehr</button>
 </nav>
 
 <div id="modal" hidden>
   <div class="modal-box" id="modalBox"></div>
 </div>
 
+<script src="logik.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
