@@ -117,14 +117,21 @@ function renderWorkout(v, card, s, key, info) {
     card.appendChild(g);
     card.appendChild(h(`<div class="hint">Diese Woche laut Plan: ${gear === 'band' ? 'Gummiband' : 'Hanteln'} (wechselt alle 2 Wochen)</div>`));
   }
+  // Trainingsdauer (30/40/50/60 min) bestimmt, wie viele Extra-Uebungen dazukommen
+  const dauer = CF.DAUER_STUFEN.includes(S.dauer) ? S.dauer : 30, exList = CF.exercisesFor(info, dauer);
+  const dg = h(`<div class="gear">${CF.DAUER_STUFEN.map(d => `<button data-d="${d}">${d} min</button>`).join('')}</div>`);
+  dg.querySelectorAll('button').forEach(b => { b.classList.toggle('on', Number(b.dataset.d) === dauer); b.onclick = () => { S.dauer = Number(b.dataset.d); save(); render(); }; });
+  card.appendChild(dg);
+  card.appendChild(h(`<div class="hint">Trainingsdauer: ${exList.length} Übungen. Mit 30 min anfangen, später in 10-Minuten-Stufen steigern.</div>`));
   const exCard = h(`<div class="card"></div>`); v.appendChild(exCard);
   const checks = S.checks[s] || (S.checks[s] = {});
   let total = 0, doneSets = 0;
-  info.ex.forEach((e, ei) => {
-    const useBand = gear === 'band' && e.band, name = useBand ? e.band.n : e.n, reps = `${e.s} × ${e.r}${key === 'cardio' ? ' (je Runde)' : ''}`;
+  exList.forEach((e, ei) => {
+    const useBand = gear === 'band' && e.band, name = useBand ? e.band.n : e.n, reps = `${e.s} × ${e.r}${key === 'cardio' && ei < 5 ? ' (je Runde)' : ''}`;
+    const img = e.img || imgOf(key, ei);
     const el = h(`<div class="ex"></div>`);
-    const wrap = h(`<div class="exwrap"><img class="eximg" src="${imgOf(key, ei)}" alt="${esc(e.n)}" loading="lazy">${useBand ? '<span class="badge">🟣 mit Gummiband</span>' : ''}<span class="zoom">⤢ größer</span></div>`);
-    wrap.onclick = () => lightbox(imgOf(key, ei), name, reps, useBand ? e.band.how : '');
+    const wrap = h(`<div class="exwrap"><img class="eximg" src="${img}" alt="${esc(e.n)}" loading="lazy">${useBand ? '<span class="badge">🟣 mit Gummiband</span>' : ''}${ei >= 5 ? '<span class="badge extra">+ Extra</span>' : ''}<span class="zoom">⤢ größer</span></div>`);
+    wrap.onclick = () => lightbox(img, name, reps, useBand ? e.band.how : '');
     el.appendChild(wrap);
     el.appendChild(h(`<div class="ex-name">${esc(name)}</div>`));
     el.appendChild(h(`<div class="ex-sub">${esc(reps)}</div>`));
@@ -150,7 +157,7 @@ function renderWorkout(v, card, s, key, info) {
   });
   const fin = h(`<button class="btn">Workout abschließen (${doneSets}/${total} Sätze)</button>`);
   fin.disabled = doneSets === 0 || s > today();
-  fin.onclick = () => finishModal({ s, key, name: info.name, min: 35, type: info.type });
+  fin.onclick = () => finishModal({ s, key, name: info.name, min: dauer, type: info.type });
   v.appendChild(fin);
   const img = h(`<button class="btn light">Ganzes Poster anzeigen</button>`);
   v.appendChild(img);

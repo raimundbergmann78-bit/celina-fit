@@ -105,6 +105,62 @@ const WORKOUTS = {
       { n: 'Shadow Boxing', s: 3, sec: 40, r: '40 sek' }
     ] }
 };
+// ---------- Extra-Uebungen (kommen bei laengerer Trainingsdauer dazu) ----------
+const EXTRA = {
+  sumo_squat: { n: 'Sumo Squat', s: 3, r: '12', img: 'uebungen/extra_sumo_squat.jpg', band: { n: 'Sumo Squat mit Miniband', how: 'Miniband über den Knien, weite Fußstellung, Knie nach außen drücken' } },
+  lateral_lunge: { n: 'Lateral Lunge', s: 3, r: '8 je Seite', img: 'uebungen/extra_lateral_lunge.jpg' },
+  single_leg_bridge: { n: 'Single-Leg Glute Bridge', s: 3, r: '10 je Bein', img: 'uebungen/extra_single_leg_bridge.jpg' },
+  bulgarian_split_squat: { n: 'Bulgarian Split Squat', s: 3, r: '8 je Bein', img: 'uebungen/extra_bulgarian_split_squat.jpg' },
+  curtsy_lunge: { n: 'Curtsy Lunge', s: 3, r: '8 je Seite', img: 'uebungen/extra_curtsy_lunge.jpg' },
+  fire_hydrant: { n: 'Fire Hydrant', s: 3, r: '12 je Seite', img: 'uebungen/extra_fire_hydrant.jpg', band: { n: 'Fire Hydrant mit Miniband', how: 'Miniband über den Knien, Knie seitlich gegen den Widerstand heben' } },
+  clamshell: { n: 'Clamshell', s: 3, r: '15 je Seite', img: 'uebungen/extra_clamshell.jpg', band: { n: 'Clamshell mit Miniband', how: 'Miniband über den Knien, oberes Knie gegen den Widerstand öffnen' } },
+  hip_thrust: { n: 'Hip Thrust (am Sofa)', s: 3, r: '12', img: 'uebungen/extra_hip_thrust.jpg' },
+  knee_pushup: { n: 'Knie-Liegestütze', s: 3, r: '8–10', img: 'uebungen/extra_knee_pushup.jpg' },
+  chest_fly: { n: 'Floor Chest Fly', s: 3, r: '12', img: 'uebungen/extra_chest_fly.jpg', band: { n: 'Band Chest Fly', how: 'Band hinter dem Rücken, Arme leicht gebeugt vor der Brust zusammenführen' } },
+  front_raise: { n: 'Front Raise', s: 3, r: '10–12', img: 'uebungen/extra_front_raise.jpg', band: { n: 'Band Front Raise', how: 'Band unter die Füße, gestreckte Arme nach vorn bis Schulterhöhe heben' } },
+  overhead_triceps: { n: 'Overhead Triceps Extension', s: 3, r: '10–12', img: 'uebungen/extra_overhead_triceps.jpg', band: { n: 'Band Triceps über Kopf', how: 'Band unter einen Fuß, Enden hinter dem Kopf, Arme nach oben strecken' } },
+  upright_row: { n: 'Upright Row', s: 3, r: '10–12', img: 'uebungen/extra_upright_row.jpg', band: { n: 'Band Upright Row', how: 'Band unter die Füße, Enden eng am Körper bis zur Brust hochziehen, Ellbogen hoch' } },
+  mountain_climbers: { n: 'Mountain Climbers', s: 3, sec: 30, r: '30 sek', img: 'uebungen/extra_mountain_climbers.jpg' },
+  russian_twist: { n: 'Russian Twist', s: 3, r: '20 (10 je Seite)', img: 'uebungen/extra_russian_twist.jpg' },
+  bicycle_crunch: { n: 'Bicycle Crunch', s: 3, r: '20', img: 'uebungen/extra_bicycle_crunch.jpg' },
+  leg_raises: { n: 'Leg Raises', s: 3, r: '10–12', img: 'uebungen/extra_leg_raises.jpg' },
+  hollow_hold: { n: 'Hollow Hold', s: 3, sec: 20, r: '20 sek', img: 'uebungen/extra_hollow_hold.jpg' },
+  sumo_deadlift: { n: 'Sumo Deadlift (Kurzhantel)', s: 3, r: '10', img: 'uebungen/extra_sumo_deadlift.jpg', band: { n: 'Band Sumo Deadlift', how: 'Band unter beide Füße, weite Fußstellung, Enden in den Händen, aus der Hüfte aufrichten' } },
+  superman: { n: 'Superman', s: 3, r: '12', img: 'uebungen/extra_superman.jpg' },
+  renegade_row: { n: 'Renegade Row', s: 3, r: '8 je Seite', img: 'uebungen/extra_renegade_row.jpg' },
+  pullover: { n: 'Dumbbell Pullover', s: 3, r: '12', img: 'uebungen/extra_pullover.jpg' },
+  shrugs: { n: 'Shrugs', s: 3, r: '15', img: 'uebungen/extra_shrugs.jpg', band: { n: 'Band Shrugs', how: 'Band unter die Füße, Schultern gegen den Widerstand zu den Ohren ziehen' } },
+  arnold_press: { n: 'Arnold Press', s: 3, r: '10', img: 'uebungen/extra_arnold_press.jpg' },
+  concentration_curl: { n: 'Concentration Curl', s: 3, r: '10 je Arm', img: 'uebungen/extra_concentration_curl.jpg', band: { n: 'Band Concentration Curl', how: 'Band unter den Fuß, Ellbogen am Oberschenkel abstützen, Arm beugen' } },
+  butt_kicks: { n: 'Butt Kicks', s: 3, sec: 40, r: '40 sek', img: 'uebungen/extra_butt_kicks.jpg' },
+  skater_steps: { n: 'Skater Steps', s: 3, sec: 40, r: '40 sek', img: 'uebungen/extra_skater_steps.jpg' },
+  squat_punch: { n: 'Squat to Punch', s: 3, sec: 40, r: '40 sek', img: 'uebungen/extra_squat_punch.jpg' },
+  inchworm: { n: 'Inchworm', s: 3, r: '6', img: 'uebungen/extra_inchworm.jpg' },
+  plank_taps: { n: 'Plank Shoulder Taps', s: 3, r: '20', img: 'uebungen/extra_plank_taps.jpg' },
+  reverse_lunge: { n: 'Reverse Lunge', s: 3, r: '8 je Bein', img: 'uebungen/glute_1.jpg' },
+  donkey_kick: { n: 'Donkey Kick', s: 3, r: '12 je Seite', img: 'uebungen/glute_3.jpg' }
+};
+const EXTRAS_BY_WORKOUT = {
+  leg: ['sumo_squat', 'lateral_lunge', 'single_leg_bridge', 'bulgarian_split_squat', 'curtsy_lunge'],
+  glute: ['fire_hydrant', 'clamshell', 'hip_thrust', 'single_leg_bridge', 'sumo_squat'],
+  upper: ['knee_pushup', 'chest_fly', 'front_raise', 'overhead_triceps', 'upright_row'],
+  quad: ['bulgarian_split_squat', 'lateral_lunge', 'sumo_squat', 'curtsy_lunge', 'reverse_lunge'],
+  core: ['mountain_climbers', 'russian_twist', 'bicycle_crunch', 'leg_raises', 'hollow_hold'],
+  post: ['single_leg_bridge', 'sumo_deadlift', 'superman', 'hip_thrust', 'donkey_kick'],
+  back: ['superman', 'renegade_row', 'pullover', 'upright_row', 'shrugs'],
+  arms: ['front_raise', 'arnold_press', 'overhead_triceps', 'concentration_curl', 'upright_row'],
+  cardio: ['butt_kicks', 'skater_steps', 'squat_punch', 'inchworm', 'plank_taps'],
+  full: ['knee_pushup', 'sumo_squat', 'renegade_row', 'mountain_climbers', 'russian_twist']
+};
+Object.keys(EXTRAS_BY_WORKOUT).forEach(k => { WORKOUTS[k].extra = EXTRAS_BY_WORKOUT[k]; });
+// Trainingsdauer: 30 min = 5 Uebungen, 40 = 7, 50 = 8, 60 = 10
+const DAUER_STUFEN = [30, 40, 50, 60];
+function extraCount(dauer) { return ({ 30: 0, 40: 2, 50: 3, 60: 5 })[dauer] || 0; }
+function exercisesFor(info, dauer) {
+  if (!info || !info.ex) return [];
+  return info.ex.concat((info.extra || []).slice(0, extraCount(dauer)).map(id => EXTRA[id]).filter(Boolean));
+}
+
 const SPECIAL = {
   swim: { name: 'Schwimmen', sub: 'Ausdauer im Wasser', type: 'swim' },
   step: { name: 'Cardio', sub: 'Stepper, Laufband oder Fahrrad', type: 'step' },
@@ -116,7 +172,7 @@ const DAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 const DAYS_LONG = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
 
 const DEFAULT = { name: 'Celina', startDate: null, swimMin: 60, stepStart: 30, stepPlus: 5, stepMax: 60,
-  holdWeeks: [], weights: [], sessions: [], checks: {}, overrides: {}, gear: {}, cardioDev: {}, lastDev: 'step', essen: {}, updatedAt: 0 };
+  holdWeeks: [], weights: [], sessions: [], checks: {}, overrides: {}, gear: {}, cardioDev: {}, lastDev: 'step', essen: {}, dauer: 30, updatedAt: 0 };
 
 // ---------- Datum ----------
 function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
@@ -157,7 +213,7 @@ function essenTag(startDate, s) { const w = weekNo(startDate, s); if (w < 1) ret
 function newerState(a, b) { return ((b && b.updatedAt) || 0) > ((a && a.updatedAt) || 0) ? b : a; }
 function sumKm(sessions, type) { return Math.round(sessions.filter(x => x.type === type).reduce((a, x) => a + (x.km || 0), 0) * 10) / 10; }
 
-root.CF = { MET, DEVICES, WORKOUTS, SPECIAL, PLAN_A, PLAN_B, DAYS, DAYS_LONG, DEFAULT,
+root.CF = { MET, DEVICES, WORKOUTS, EXTRA, DAUER_STUFEN, extraCount, exercisesFor, SPECIAL, PLAN_A, PLAN_B, DAYS, DAYS_LONG, DEFAULT,
   iso, fromIso, addDays, wdIdx, mondayOf, fmt, fmtLong, weekNo, planLetter, planKey, infoOf, imgOf, gearOf, stepMinutes, devOf,
   sessionOf, lastWeight, weightThisWeek, kcalEst, newerState, sumKm, essenTag };
 })(typeof module !== 'undefined' && module.exports ? module.exports : window);

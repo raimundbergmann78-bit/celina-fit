@@ -1,7 +1,7 @@
 /* Service Worker: macht die App offline nutzbar.
    Mit Internet: immer die neueste Datei laden (Updates kommen automatisch).
    Ohne Internet: aus dem Zwischenspeicher. */
-const CACHE = 'celinafit-v4';
+const CACHE = 'celinafit-v5';
 const FILES = [
   './', './index.html', './style.css', './logik.js', './essen.js', './app.js', './manifest.webmanifest',
   './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png', './icons/splash.jpg',
@@ -12,6 +12,10 @@ const FILES = [
 for (const k of ['leg', 'glute', 'upper', 'quad', 'core', 'post', 'back', 'arms', 'cardio', 'full']) {
   for (let i = 0; i < 5; i++) FILES.push('./uebungen/' + k + '_' + i + '.jpg');
 }
+for (const n of ['sumo_squat', 'lateral_lunge', 'single_leg_bridge', 'bulgarian_split_squat', 'curtsy_lunge', 'fire_hydrant', 'clamshell', 'hip_thrust',
+  'knee_pushup', 'chest_fly', 'front_raise', 'overhead_triceps', 'upright_row', 'mountain_climbers', 'russian_twist', 'bicycle_crunch', 'leg_raises',
+  'hollow_hold', 'sumo_deadlift', 'superman', 'renegade_row', 'pullover', 'shrugs', 'arnold_press', 'concentration_curl', 'butt_kicks', 'skater_steps',
+  'squat_punch', 'inchworm', 'plank_taps']) FILES.push('./uebungen/extra_' + n + '.jpg');
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
 });
