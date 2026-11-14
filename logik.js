@@ -183,6 +183,28 @@ const EXTRAS_BY_WORKOUT = {
   band: ['fire_hydrant', 'clamshell', 'hip_thrust', 'single_leg_bridge', 'lateral_lunge']
 };
 Object.keys(EXTRAS_BY_WORKOUT).forEach(k => { WORKOUTS[k].extra = EXTRAS_BY_WORKOUT[k]; });
+
+// ---------- Start + Bewegung fuer alle uebrigen Uebungen (14.11.2026) ----------
+const POS2 = {
+  'Squats': 'squat', 'Bodyweight Squat': 'squat', 'Lunges': 'lunge', 'Calf Raises': 'calf_raise', 'Side Leg Raises': 'side_leg_raise',
+  'Wall Sit': 'wall_sit', 'Glute Bridge': 'glute_bridge', 'Reverse Lunge': 'reverse_lunge', 'Side-Lying Leg Raise': 'side_lying_leg_raise',
+  'Donkey Kick': 'donkey_kick', 'Floor Press': 'floor_press', 'Bent-Over Row': 'bent_over_row', 'Shoulder Press': 'shoulder_press',
+  'Biceps Curl': 'biceps_curl', 'Triceps Kickback': 'triceps_kickback', 'Goblet Squat': 'goblet_squat', 'Split Squat': 'split_squat',
+  'Low Step-Up': 'step_up', 'Dead Bug': 'dead_bug', 'Forearm Plank': 'forearm_plank', 'Bird Dog': 'bird_dog', 'Side Plank': 'side_plank',
+  'Reverse Crunch': 'reverse_crunch', 'Dumbbell RDL': 'rdl', 'Kickstand RDL': 'kickstand_rdl', 'Hamstring Walkout': 'hamstring_walkout',
+  'Good Morning': 'good_morning', 'Supported Row': 'supported_row', 'Reverse Fly': 'reverse_fly', 'Prone W Raise': 'prone_w_raise',
+  'Lateral Raise': 'lateral_raise', 'Hammer Curl': 'hammer_curl', 'March in Place': 'march', 'Step Jacks': 'step_jacks', 'Side Steps': 'side_steps',
+  'Standing Knee Drives': 'knee_drives', 'Shadow Boxing': 'shadow_boxing', 'Sumo Squat': 'sumo_squat', 'Lateral Lunge': 'lateral_lunge',
+  'Single-Leg Glute Bridge': 'single_leg_bridge', 'Bulgarian Split Squat': 'bulgarian', 'Curtsy Lunge': 'curtsy_lunge', 'Fire Hydrant': 'fire_hydrant',
+  'Clamshell': 'clamshell', 'Hip Thrust (am Sofa)': 'hip_thrust', 'Knie-Liegestütze': 'knee_pushup', 'Floor Chest Fly': 'chest_fly',
+  'Front Raise': 'front_raise', 'Overhead Triceps Extension': 'overhead_triceps', 'Upright Row': 'upright_row', 'Mountain Climbers': 'mountain_climbers',
+  'Russian Twist': 'russian_twist', 'Bicycle Crunch': 'bicycle_crunch', 'Leg Raises': 'leg_raises', 'Hollow Hold': 'hollow_hold',
+  'Sumo Deadlift (Kurzhantel)': 'sumo_deadlift', 'Superman': 'superman', 'Renegade Row': 'renegade_row', 'Dumbbell Pullover': 'pullover',
+  'Shrugs': 'shrugs', 'Arnold Press': 'arnold_press', 'Concentration Curl': 'concentration_curl'
+};
+function mitPositionen(e) { const slug = POS2[e.n]; if (slug && !e.pos) { e.pos = posBilder('p_' + slug, 2); e.img = e.pos[0]; } }
+Object.values(WORKOUTS).forEach(w => w.ex.forEach(mitPositionen));
+Object.values(EXTRA).forEach(mitPositionen);
 // Trainingsdauer: 30 min = 5 Uebungen, 40 = 7, 50 = 8, 60 = 10
 const DAUER_STUFEN = [30, 40, 50, 60];
 function extraCount(dauer) { return ({ 30: 0, 40: 2, 50: 3, 60: 5 })[dauer] || 0; }
@@ -293,7 +315,7 @@ function suppMenge(S, x) { return (S.suppMenge || {})[x.id] || x.m; }
 function newerState(a, b) { return ((b && b.updatedAt) || 0) > ((a && a.updatedAt) || 0) ? b : a; }
 function sumKm(sessions, type) { return Math.round(sessions.filter(x => x.type === type).reduce((a, x) => a + (x.km || 0), 0) * 10) / 10; }
 
-root.CF = { MET, DEVICES, WORKOUTS, EXTRA, DAUER_STUFEN, extraCount, exercisesFor, SPECIAL, PLAN_A, PLAN_B, DAYS, DAYS_LONG, DEFAULT,
+root.CF = { POS2, MET, DEVICES, WORKOUTS, EXTRA, DAUER_STUFEN, extraCount, exercisesFor, SPECIAL, PLAN_A, PLAN_B, DAYS, DAYS_LONG, DEFAULT,
   iso, fromIso, addDays, wdIdx, mondayOf, fmt, fmtLong, weekNo, planLetter, planKey, infoOf, imgOf, gearOf, stepMinutes, devOf,
   sessionOf, lastWeight, weightThisWeek, kcalEst, newerState, sumKm, essenTag, SUPPS, SUPP_ZEITEN, suppsFor, suppMenge, istTrainingstag, naechsterSatz, saetzeErledigt, letztenSatzZurueck, zielWdh, trainingsMinuten };
 })(typeof module !== 'undefined' && module.exports ? module.exports : window);
