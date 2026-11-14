@@ -202,7 +202,7 @@ const DAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 const DAYS_LONG = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
 
 const DEFAULT = { name: 'Celina', startDate: null, swimMin: 60, stepStart: 30, stepPlus: 5, stepMax: 60,
-  holdWeeks: [], weights: [], sessions: [], checks: {}, overrides: {}, gear: {}, cardioDev: {}, lastDev: 'step', essen: {}, dauer: 30, supps: {}, suppAus: { zink: true }, suppMenge: {}, updatedAt: 0 };
+  holdWeeks: [], weights: [], sessions: [], checks: {}, overrides: {}, gear: {}, cardioDev: {}, lastDev: 'step', essen: {}, dauer: 30, supps: {}, suppAus: { zink: true }, suppMenge: {}, log: {}, updatedAt: 0 };
 
 // ---------- Datum ----------
 function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
@@ -240,6 +240,31 @@ function kcalEst(kg, type, min, dev) {
 // Essensplan: Tag 0–13 im 14-Tage-Plan (Woche A = Tag 1–7, Woche B = Tag 8–14)
 function essenTag(startDate, s) { const w = weekNo(startDate, s); if (w < 1) return 0; return ((w - 1) * 7 + wdIdx(s)) % 14; }
 
+
+// ---------- Gefuehrtes Workout ----------
+// log = { sets: { ei: [Werte] }, skip: { ei: true } }
+function naechsterSatz(exList, log) {
+  const sets = (log && log.sets) || {}, skip = (log && log.skip) || {};
+  for (let ei = 0; ei < exList.length; ei++) {
+    if (skip[ei]) continue;
+    const n = (sets[ei] || []).length;
+    if (n < exList[ei].s) return { ei, satz: n };
+  }
+  return null;
+}
+function saetzeErledigt(exList, log) {
+  const sets = (log && log.sets) || {};
+  return exList.reduce((a, e, ei) => a + Math.min(e.s, (sets[ei] || []).length), 0);
+}
+function letztenSatzZurueck(exList, log) {
+  const sets = (log && log.sets) || {};
+  const nx = naechsterSatz(exList, log), bis = nx ? nx.ei : exList.length - 1;
+  for (let ei = bis; ei >= 0; ei--) { if (sets[ei] && sets[ei].length) { sets[ei].pop(); if (log.skip) delete log.skip[ei]; return true; } }
+  return false;
+}
+function zielWdh(r) { const m = String(r).match(/\d+/); return m ? Number(m[0]) : 10; }
+function trainingsMinuten(log, jetzt) { if (!log || !log.start) return 0; const m = Math.round((jetzt - log.start) / 60000); return m >= 1 && m <= 240 ? m : 0; }
+
 // ---------- Supplemente (besprochen am 14.11.2026) ----------
 // zeit: morgens | mittags | vor (vor dem Training) | nach (nach dem Training) | abends
 const SUPP_ZEITEN = [['morgens', 'Morgens zum Frühstück'], ['mittags', 'Mittags'], ['vor', '30–60 min vor dem Training'], ['nach', 'Nach dem Training'], ['abends', 'Abends']];
@@ -270,5 +295,5 @@ function sumKm(sessions, type) { return Math.round(sessions.filter(x => x.type =
 
 root.CF = { MET, DEVICES, WORKOUTS, EXTRA, DAUER_STUFEN, extraCount, exercisesFor, SPECIAL, PLAN_A, PLAN_B, DAYS, DAYS_LONG, DEFAULT,
   iso, fromIso, addDays, wdIdx, mondayOf, fmt, fmtLong, weekNo, planLetter, planKey, infoOf, imgOf, gearOf, stepMinutes, devOf,
-  sessionOf, lastWeight, weightThisWeek, kcalEst, newerState, sumKm, essenTag, SUPPS, SUPP_ZEITEN, suppsFor, suppMenge, istTrainingstag };
+  sessionOf, lastWeight, weightThisWeek, kcalEst, newerState, sumKm, essenTag, SUPPS, SUPP_ZEITEN, suppsFor, suppMenge, istTrainingstag, naechsterSatz, saetzeErledigt, letztenSatzZurueck, zielWdh, trainingsMinuten };
 })(typeof module !== 'undefined' && module.exports ? module.exports : window);

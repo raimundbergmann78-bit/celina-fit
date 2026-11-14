@@ -191,3 +191,16 @@ img.poster { width: 100%; border-radius: 12px; margin-top: 10px; border: 1px sol
 .supp-edit label { flex: 1; font-size: 14px; }
 .supp-edit input[type=text] { width: 120px; font-size: 14px; padding: 8px; }
 #nav button { font-size: 8.5px; letter-spacing: .3px; }
+
+/* Gefuehrtes Workout */
+.wk-kopf { margin-bottom: 10px; }
+.wk-schritt { font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
+.wk-bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; border: 1px solid var(--line); }
+.wk-bar div { height: 100%; background: var(--green); box-shadow: var(--glow-g); transition: width .9s linear; }
+.wk .eximg { max-height: 220px; }
+.wk-eingabe { display: flex; gap: 10px; align-items: center; justify-content: center; }
+.wk-eingabe input { width: 110px; text-align: center; font-size: 34px; font-weight: 800; padding: 8px; }
+.wk-pm { width: 58px; height: 58px; border-radius: 50%; font-size: 30px; font-weight: 800; background: #000; color: var(--green); border: 2px solid var(--green); box-shadow: var(--glow-g); }
+.wk-pause { border-color: var(--blue); box-shadow: 0 0 22px rgba(255, 140, 26, .35); }
+.wk-vorschau { margin-top: 12px; }
+.wk-vorschau .eximg { max-height: 170px; }

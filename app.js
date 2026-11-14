@@ -109,7 +109,7 @@ function renderHeute(v) {
     const extra = (done.dev ? ' · ' + DEVICES[done.dev].n : '') + (done.km ? ' · ' + String(done.km).replace('.', ',') + ' km' : '');
     card.appendChild(h(`<div class="done-banner" style="margin-top:12px">✅ Erledigt: ${done.min} min · ${done.kcal} kcal${esc(extra)}</div>`));
     card.appendChild(h(`<button class="btn light">Rückgängig</button>`)).onclick = () => {
-      if (confirm('Eintrag löschen?')) { S.sessions = S.sessions.filter(x => x !== done); save(); render(); }
+      if (confirm('Eintrag löschen?')) { S.sessions = S.sessions.filter(x => x !== done); if (S.log) delete S.log[s]; save(); render(); }
     };
     return;
   }
@@ -121,62 +121,168 @@ function renderHeute(v) {
   v.appendChild(other); other.onclick = () => chooseWorkout(s);
 }
 
+// ----- Workout: gefuehrter Ablauf (eine Uebung nach der anderen) -----
+// Gespeichert in S.log[s] = { start, sets: { ei: [Wdh oder Sekunden, ...] }, skip: { ei: true }, ende }
+let wkPause = null; // { s, left, total, iv } laeuft nur im Speicher
+function wkLog(s) { S.log = S.log || {}; return S.log[s]; }
+function wkStopPause() { if (wkPause) { clearInterval(wkPause.iv); wkPause = null; } }
+function exName(e, gear) { return gear === 'band' && e.band ? e.band.n : e.n; }
+
 function renderWorkout(v, card, s, key, info) {
-  const gear = gearOf(s), hasBand = info.ex.some(e => e.band);
-  card.appendChild(h(`<div class="tips">${info.tips.map(t => `<span>${esc(t)}</span>`).join('')}</div>`));
+  const gear = gearOf(s), hasBand = info.ex.some(e => e.band), log = wkLog(s);
+  const dauer = CF.DAUER_STUFEN.includes(S.dauer) ? S.dauer : 30;
+  const exList = CF.exercisesFor(info, log && log.dauer ? log.dauer : dauer);
+  if (!log) card.appendChild(h(`<div class="tips">${info.tips.map(t => `<span>${esc(t)}</span>`).join('')}</div>`));
+  if (!log) return renderWorkoutStart(v, card, s, key, info, gear, hasBand, dauer, exList);
+  const next = CF.naechsterSatz(exList, log);
+  if (wkPause && wkPause.s === s) return renderWorkoutPause(v, s, key, info, gear, exList, next);
+  if (!next) return renderWorkoutFertig(v, s, key, info, gear, exList, log);
+  renderWorkoutSatz(v, s, key, info, gear, exList, log, next);
+}
+
+function renderWorkoutStart(v, card, s, key, info, gear, hasBand, dauer, exList) {
   if (hasBand) {
     const g = h(`<div class="gear"><button data-g="hantel">🏋️ Hanteln</button><button data-g="band">🟣 Gummiband</button></div>`);
     g.querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.g === gear); b.onclick = () => { S.gear[s] = b.dataset.g; save(); render(); }; });
     card.appendChild(g);
     card.appendChild(h(`<div class="hint">Diese Woche laut Plan: ${gear === 'band' ? 'Gummiband' : 'Hanteln'} (wechselt alle 2 Wochen)</div>`));
   }
-  // Trainingsdauer (30/40/50/60 min) bestimmt, wie viele Extra-Uebungen dazukommen
-  const dauer = CF.DAUER_STUFEN.includes(S.dauer) ? S.dauer : 30, exList = CF.exercisesFor(info, dauer);
   const dg = h(`<div class="gear">${CF.DAUER_STUFEN.map(d => `<button data-d="${d}">${d} min</button>`).join('')}</div>`);
   dg.querySelectorAll('button').forEach(b => { b.classList.toggle('on', Number(b.dataset.d) === dauer); b.onclick = () => { S.dauer = Number(b.dataset.d); save(); render(); }; });
   card.appendChild(dg);
-  card.appendChild(h(`<div class="hint">Trainingsdauer: ${exList.length} Übungen. Mit 30 min anfangen, später in 10-Minuten-Stufen steigern.</div>`));
-  const exCard = h(`<div class="card"></div>`); v.appendChild(exCard);
-  const checks = S.checks[s] || (S.checks[s] = {});
-  let total = 0, doneSets = 0;
+  const saetze = exList.reduce((a, e) => a + e.s, 0);
+  card.appendChild(h(`<div class="big" style="font-size:30px">${exList.length} Übungen · ${saetze} Sätze</div>`));
+  card.appendChild(h(`<div class="hint center">Mit 30 min anfangen, später in 10-Minuten-Stufen steigern.</div>`));
+  const go = h(`<button class="btn" style="margin-top:14px;font-size:20px;padding:18px">▶ Training starten</button>`);
+  go.disabled = s > today();
+  go.onclick = () => { S.log = S.log || {}; S.log[s] = { start: Date.now(), dauer, sets: {}, skip: {} }; save(); render(); window.scrollTo(0, 0); };
+  card.appendChild(go);
+  if (s > today()) card.appendChild(h(`<div class="hint center">Starten geht erst am Trainingstag.</div>`));
+  const tog = h(`<button class="btn light small" style="margin-top:12px">Übungen ansehen</button>`); card.appendChild(tog);
+  tog.onclick = () => {
+    const n = tog.nextSibling;
+    if (n && n.classList && n.classList.contains('wk-liste')) { n.remove(); tog.textContent = 'Übungen ansehen'; return; }
+    tog.after(h(`<div class="wk-liste">${exList.map((e, i) => `<div class="list-item"><span>${i + 1}. ${esc(exName(e, gear))}</span><span>${e.s} × ${esc(e.r)}</span></div>`).join('')}</div>`));
+    tog.textContent = 'Liste ausblenden';
+  };
+}
+
+function wkBild(e, key, ei, gear) {
+  const img = e.img || imgOf(key, ei), pos = e.pos && e.pos.length > 1 ? e.pos : null, useBand = gear === 'band' && e.band;
+  const wrap = h(`<div class="exwrap"><img class="eximg" src="${img}" alt="${esc(e.n)}">${useBand ? '<span class="badge">🟣 mit Gummiband</span>' : ''}${pos ? `<div class="pos-dots">${pos.map((_, k) => `<span class="${k === 0 ? 'on' : ''}">${k + 1}</span>`).join('')}</div>` : ''}<span class="zoom">⤢ größer</span></div>`);
+  if (pos) { pos.slice(1).forEach(p => { const pre = new Image(); pre.src = p; }); posWechsel(wrap.querySelector('.eximg'), wrap.querySelector('.pos-dots'), pos); }
+  wrap.onclick = () => lightbox(img, exName(e, gear), `${e.s} × ${e.r}`, useBand ? e.band.how : '', pos);
+  return wrap;
+}
+function wkKopf(exList, log, ei, satz) {
+  const done = CF.saetzeErledigt(exList, log), total = exList.reduce((a, e) => a + e.s, 0);
+  return h(`<div class="wk-kopf"><div class="wk-schritt">Übung ${ei + 1} von ${exList.length} · Satz ${satz + 1} von ${exList[ei].s}</div><div class="wk-bar"><div style="width:${Math.round(done / total * 100)}%"></div></div></div>`);
+}
+
+function renderWorkoutSatz(v, s, key, info, gear, exList, log, next) {
+  const e = exList[next.ei], card = h(`<div class="card wk"></div>`); v.appendChild(card);
+  card.appendChild(wkKopf(exList, log, next.ei, next.satz));
+  card.appendChild(wkBild(e, key, next.ei, gear));
+  card.appendChild(h(`<div class="ex-name" style="font-size:22px">${esc(exName(e, gear))}</div>`));
+  card.appendChild(h(`<div class="ex-sub">Ziel: ${esc(e.r)}${e.sec ? '' : ' Wiederholungen'}</div>`));
+  if (gear === 'band' && e.band) card.appendChild(h(`<div class="ex-how">${esc(e.band.how)}</div>`));
+  const vorher = ((log.sets || {})[next.ei] || []);
+  const vorschlag = vorher.length ? vorher[vorher.length - 1] : (e.sec || CF.zielWdh(e.r));
+  const einheit = e.sec ? 'Sekunden' : 'Wiederholungen';
+  const feld = h(`<div class="wk-eingabe"><button class="wk-pm">−</button><input type="number" inputmode="numeric" min="0" value="${vorschlag}"><button class="wk-pm">+</button></div>`);
+  const inp = feld.querySelector('input'), [minus, plus] = feld.querySelectorAll('button');
+  minus.onclick = () => { inp.value = Math.max(0, (Number(inp.value) || 0) - 1); };
+  plus.onclick = () => { inp.value = (Number(inp.value) || 0) + 1; };
+  if (e.sec) {
+    const uhr = h(`<div class="big" id="wkUhr">${e.sec}s</div>`), sb = h(`<button class="btn pink">▶ ${e.sec} Sekunden starten</button>`);
+    card.appendChild(uhr); card.appendChild(sb);
+    let iv = null, gelaufen = 0;
+    sb.onclick = () => {
+      if (iv) { clearInterval(iv); iv = null; inp.value = gelaufen; sb.textContent = '▶ Weiter'; return; }
+      sb.textContent = '⏸ Anhalten';
+      iv = setInterval(() => { gelaufen++; const left = e.sec - gelaufen; uhr.textContent = (left > 0 ? left : 0) + 's'; inp.value = gelaufen;
+        if (left <= 0) { clearInterval(iv); iv = null; beep(3); sb.textContent = 'Geschafft!'; sb.disabled = true; } }, 1000);
+      timers.push(iv);
+    };
+  }
+  card.appendChild(h(`<label class="center">Geschafft (${einheit})</label>`));
+  card.appendChild(feld);
+  const ok = h(`<button class="btn" style="font-size:20px;padding:16px;margin-top:12px">OK – Satz ${next.satz + 1} fertig</button>`);
+  ok.onclick = () => {
+    const now = Date.now(); if (now - lastTap < 600) return; lastTap = now;
+    const wert = Math.max(0, Math.round(Number(inp.value) || 0));
+    log.sets = log.sets || {}; (log.sets[next.ei] = log.sets[next.ei] || []).push(wert);
+    const c = S.checks[s] || (S.checks[s] = {}); (c[next.ei] = c[next.ei] || [])[next.satz] = true;
+    save(); beep(1);
+    if (CF.naechsterSatz(exList, log)) wkStartPause(s, info.rest); else { wkStopPause(); }
+    render(); window.scrollTo(0, 0);
+  };
+  card.appendChild(ok);
+  const row = h(`<div class="btnrow"><button class="btn light small">↶ Letzten Satz zurück</button><button class="btn light small">Übung überspringen</button></div>`);
+  const [zur, skip] = row.querySelectorAll('button');
+  zur.disabled = CF.saetzeErledigt(exList, log) === 0;
+  zur.onclick = () => { if (CF.letztenSatzZurueck(exList, log)) { save(); render(); } };
+  skip.onclick = () => { if (confirm('„' + exName(e, gear) + '“ überspringen?')) { log.skip = log.skip || {}; log.skip[next.ei] = true; save(); render(); window.scrollTo(0, 0); } };
+  card.appendChild(row);
+  wkEndeKnopf(v, s, key, info, exList, log);
+}
+
+function wkStartPause(s, sek) {
+  wkStopPause();
+  wkPause = { s, left: sek, total: sek, iv: null };
+  wkPause.iv = setInterval(() => {
+    if (!wkPause) return;
+    wkPause.left--;
+    const t = document.getElementById('wkPauseZeit'), bar = document.getElementById('wkPauseBar');
+    if (t) t.textContent = Math.max(0, wkPause.left);
+    if (bar) bar.style.width = Math.round((1 - wkPause.left / wkPause.total) * 100) + '%';
+    if (wkPause.left <= 0) { wkStopPause(); beep(2); if (view === 'heute') render(); }
+  }, 1000);
+}
+
+function renderWorkoutPause(v, s, key, info, gear, exList, next) {
+  const card = h(`<div class="card wk wk-pause"></div>`); v.appendChild(card);
+  card.appendChild(h(`<div class="wk-schritt center">Pause</div>`));
+  card.appendChild(h(`<div class="big" style="font-size:72px" id="wkPauseZeit">${Math.max(0, wkPause.left)}</div>`));
+  card.appendChild(h(`<div class="wk-bar"><div id="wkPauseBar" style="width:${Math.round((1 - wkPause.left / wkPause.total) * 100)}%"></div></div>`));
+  if (next) {
+    const e = exList[next.ei];
+    card.appendChild(h(`<div class="sub center" style="margin-top:14px">Gleich: <b>${esc(exName(e, gear))}</b><br>Satz ${next.satz + 1} von ${e.s}${next.satz === 0 ? ' · neue Übung' : ''}</div>`));
+    if (next.satz === 0) { const b = wkBild(e, key, next.ei, gear); b.classList.add('wk-vorschau'); card.appendChild(b); }
+  }
+  const row = h(`<div class="btnrow"><button class="btn">Pause beenden ▶</button><button class="btn light">+15 s</button></div>`);
+  const [weiter, mehr] = row.querySelectorAll('button');
+  weiter.onclick = () => { wkStopPause(); render(); window.scrollTo(0, 0); };
+  mehr.onclick = () => { if (wkPause) { wkPause.left += 15; wkPause.total += 15; document.getElementById('wkPauseZeit').textContent = wkPause.left; } };
+  card.appendChild(row);
+}
+
+function renderWorkoutFertig(v, s, key, info, gear, exList, log) {
+  const card = h(`<div class="card wk"></div>`); v.appendChild(card);
+  card.appendChild(h(`<div class="big" style="font-size:34px">💪 Geschafft!</div>`));
+  const min = CF.trainingsMinuten(log, Date.now());
+  card.appendChild(h(`<div class="sub center">Alle Übungen erledigt${min ? ' · ' + min + ' Minuten' : ''}</div>`));
+  card.appendChild(h(`<h3>Deine Sätze</h3>`));
   exList.forEach((e, ei) => {
-    const useBand = gear === 'band' && e.band, name = useBand ? e.band.n : e.n, reps = `${e.s} × ${e.r}${key === 'cardio' && ei < 5 ? ' (je Runde)' : ''}`;
-    const img = e.img || imgOf(key, ei);
-    const el = h(`<div class="ex"></div>`);
-    const pos = e.pos && e.pos.length > 1 ? e.pos : null;
-    const wrap = h(`<div class="exwrap"><img class="eximg" src="${img}" alt="${esc(e.n)}" loading="lazy">${useBand ? '<span class="badge">🟣 mit Gummiband</span>' : ''}${ei >= 5 ? '<span class="badge extra">+ Extra</span>' : ''}${pos ? `<div class="pos-dots">${pos.map((_, k) => `<span class="${k === 0 ? 'on' : ''}">${k + 1}</span>`).join('')}</div>` : ''}<span class="zoom">⤢ größer</span></div>`);
-    if (pos) { pos.slice(1).forEach(p => { const pre = new Image(); pre.src = p; }); posWechsel(wrap.querySelector('.eximg'), wrap.querySelector('.pos-dots'), pos); }
-    wrap.onclick = () => lightbox(img, name, reps, useBand ? e.band.how : '', pos);
-    el.appendChild(wrap);
-    el.appendChild(h(`<div class="ex-name">${esc(name)}</div>`));
-    el.appendChild(h(`<div class="ex-sub">${esc(reps)}</div>`));
-    if (useBand) el.appendChild(h(`<div class="ex-how">${esc(e.band.how)}</div>`));
-    const sets = h(`<div class="sets"></div>`);
-    const arr = checks[ei] || (checks[ei] = Array(e.s).fill(false));
-    for (let i = 0; i < e.s; i++) {
-      total++; if (arr[i]) doneSets++;
-      const b = h(`<button class="set ${arr[i] ? 'on' : ''} ${e.sec ? 'timer' : ''}">${arr[i] ? '✓' : (e.sec ? '▶ ' + e.sec + 's' : 'Satz ' + (i + 1))}</button>`);
-      b.onclick = () => {
-        const now = Date.now(); if (now - lastTap < 600) return; lastTap = now;
-        if (arr[i]) { arr[i] = false; save(); render(); return; }
-        if (e.sec && !b.classList.contains('running')) {
-          b.classList.add('running'); let left = e.sec; b.textContent = left + 's';
-          const iv = setInterval(() => { left--; b.textContent = left + 's'; if (left <= 0) { clearInterval(iv); beep(3); arr[i] = true; save(); startRest(info.rest); render(); } }, 1000);
-          timers.push(iv); return;
-        }
-        arr[i] = true; save(); startRest(info.rest); render();
-      };
-      sets.appendChild(b);
-    }
-    el.appendChild(sets); exCard.appendChild(el);
+    const w = (log.sets || {})[ei] || [], sk = (log.skip || {})[ei];
+    card.appendChild(h(`<div class="list-item"><span>${esc(exName(e, gear))}</span><span>${sk ? 'übersprungen' : esc(w.join(' · ')) + (e.sec ? ' s' : '')}</span></div>`));
   });
-  const fin = h(`<button class="btn">Workout abschließen (${doneSets}/${total} Sätze)</button>`);
-  fin.disabled = doneSets === 0 || s > today();
-  fin.onclick = () => finishModal({ s, key, name: info.name, min: dauer, type: info.type });
-  v.appendChild(fin);
-  const img = h(`<button class="btn light">Ganzes Poster anzeigen</button>`);
-  v.appendChild(img);
-  img.onclick = () => { const n = img.nextSibling; if (n && n.tagName === 'IMG') { n.remove(); img.textContent = 'Ganzes Poster anzeigen'; } else { img.after(h(`<img class="poster" src="${info.poster}" alt="">`)); img.textContent = 'Poster ausblenden'; } };
+  const fin = h(`<button class="btn" style="margin-top:14px">Workout abschließen</button>`);
+  fin.onclick = () => finishModal({ s, key, name: info.name, min: min || log.dauer || 30, type: info.type });
+  card.appendChild(fin);
+}
+
+function wkEndeKnopf(v, s, key, info, exList, log) {
+  const b = h(`<button class="btn light" style="margin-top:12px">Training beenden</button>`);
+  b.onclick = () => {
+    if (!confirm('Training jetzt beenden? Die geschafften Sätze bleiben gespeichert.')) return;
+    exList.forEach((_, ei) => { const w = (log.sets || {})[ei] || []; if (w.length < exList[ei].s) { log.skip = log.skip || {}; log.skip[ei] = true; } });
+    wkStopPause(); save(); render(); window.scrollTo(0, 0);
+  };
+  v.appendChild(b);
+  const neu = h(`<button class="btn light small" style="margin-top:10px;color:#ff4d6d;border-color:#ff4d6d">Training neu starten</button>`);
+  neu.onclick = () => { if (confirm('Alle Sätze von heute löschen und neu starten?')) { wkStopPause(); delete S.log[s]; delete S.checks[s]; save(); render(); } };
+  v.appendChild(neu);
 }
 
 function renderSwim(v, card, s) {
