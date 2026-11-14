@@ -91,11 +91,11 @@ function render() {
   clearTimers();
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
   const v = $('#view'); v.innerHTML = '';
-  ({ heute: renderHeute, woche: renderWoche, essen: renderEssen, gewicht: renderGewicht, verlauf: renderVerlauf, einstellungen: renderEinst })[view](v);
+  ({ heute: renderHeute, woche: renderWoche, essen: renderEssen, supps: renderSupps, gewicht: renderGewicht, verlauf: renderVerlauf, einstellungen: renderEinst })[view](v);
   updateSyncBadge();
   window.scrollTo(0, 0);
 }
-document.querySelectorAll('#nav button').forEach(b => b.onclick = () => { view = b.dataset.view; if (view === 'heute') selDate = today(); if (view === 'essen') { essenDate = today(); essenOpen = {}; } render(); });
+document.querySelectorAll('#nav button').forEach(b => b.onclick = () => { view = b.dataset.view; if (view === 'heute') selDate = today(); if (view === 'essen') { essenDate = today(); essenOpen = {}; } if (view === 'supps') { suppDate = today(); suppOpen = {}; suppEdit = false; } render(); });
 
 // ----- Heute -----
 function renderHeute(v) {
@@ -381,6 +381,50 @@ function einkaufsliste(s) {
   const rows = Object.keys(sum).sort((a, b) => a.localeCompare(b, 'de')).map(k => { const [n, e] = k.split('|'); return `<div class="list-item"><span>${esc(n)}</span><span>${menge(sum[k], e)}</span></div>`; }).join('');
   openModal(`<h2>Einkaufsliste</h2><div class="sub">${fmt(mon)} – ${fmt(addDays(mon, 6))} · alle Mahlzeiten der Woche, 1 Person</div><div style="margin-top:10px;max-height:60vh;overflow:auto">${rows}</div><button class="btn light" id="elClose" style="margin-top:14px">Schließen</button>`);
   $('#elClose').onclick = closeModal;
+}
+
+// ----- Supplemente -----
+let suppDate = today(), suppOpen = {}, suppEdit = false;
+function suppGenommen(s) { const g = S.supps[s] || {}, liste = CF.suppsFor(S, s); return { n: liste.filter(x => g[x.id]).length, von: liste.length }; }
+function renderSupps(v) {
+  const s = suppDate, liste = CF.suppsFor(S, s), g = S.supps[s] || {}, tr = CF.istTrainingstag(S, s), st = suppGenommen(s);
+  setTop('Supps', (tr ? 'Trainingstag' : 'Ruhetag') + ' · ' + st.n + ' von ' + st.von + ' genommen');
+  const nav = h(`<div class="weeknav"><button class="btn light small">‹</button><b>${fmtLong(s)}</b><button class="btn light small">›</button></div>`);
+  const [p, n] = nav.querySelectorAll('button');
+  p.onclick = () => { suppDate = addDays(s, -1); render(); }; n.onclick = () => { suppDate = addDays(s, 1); render(); };
+  v.appendChild(nav);
+  const mon = mondayOf(s); let voll = 0;
+  for (let i = 0; i < 7; i++) { const d = addDays(mon, i), x = suppGenommen(d); if (x.von && x.n === x.von) voll++; }
+  v.appendChild(h(`<div class="stat"><div><b>${st.n}/${st.von}</b><span>heute</span></div><div><b>${voll}/7</b><span>Tage komplett</span></div></div>`));
+  CF.SUPP_ZEITEN.forEach(([zeit, titel]) => {
+    const teil = liste.filter(x => x.zeit === zeit); if (!teil.length) return;
+    const card = h(`<div class="card"><h3 style="margin-top:0">${esc(titel)}</h3></div>`);
+    teil.forEach(x => {
+      const done = !!g[x.id], open = !!suppOpen[x.id];
+      const row = h(`<div class="supp-row"><div class="grow"><div class="supp-name">${esc(x.n)}</div><div class="sub">${esc(CF.suppMenge(S, x))} · <button class="linkbtn">${open ? 'weniger' : 'Info'}</button></div></div><button class="set meal-check ${done ? 'on' : ''}">${done ? '✓ Genommen' : 'Genommen?'}</button></div>`);
+      row.querySelector('.meal-check').onclick = () => { const e = S.supps[s] || (S.supps[s] = {}); e[x.id] = !e[x.id]; save(); render(); };
+      row.querySelector('.linkbtn').onclick = () => { suppOpen[x.id] = !open; render(); };
+      card.appendChild(row);
+      if (open) card.appendChild(h(`<div class="ex-how">${esc(x.info)}${x.hinweis ? '<br>⚠️ ' + esc(x.hinweis) : ''}</div>`));
+    });
+    v.appendChild(card);
+  });
+  if (!tr) v.appendChild(h(`<div class="hint" style="margin-bottom:12px">Ruhetag: Die Sachen vor und nach dem Training fallen heute weg.</div>`));
+  v.appendChild(h(`<div class="card"><h3 style="margin-top:0">Wichtig</h3><div class="sub">• Eisen nicht auf Verdacht nehmen. <b>Ferritin (Eisen) und Vitamin D beim Arzt prüfen lassen.</b><br>• Eisen später nie zusammen mit Calcium, Magnesium, Kaffee oder Tee.<br>• Arginin und Citrullin wirken ähnlich, eins davon reicht.<br>• Allgemeine Richtwerte, keine ärztliche Beratung. Bei Medikamenten oder Schwangerschaft vorher Arzt oder Apotheke fragen.</div></div>`));
+  const eb = h(`<button class="btn light">${suppEdit ? 'Fertig' : 'Meine Supplemente bearbeiten'}</button>`); eb.onclick = () => { suppEdit = !suppEdit; render(); }; v.appendChild(eb);
+  if (suppEdit) {
+    const card = h(`<div class="card" style="margin-top:12px"><h3 style="margin-top:0">An/aus und eigene Menge</h3></div>`);
+    CF.SUPPS.forEach(x => {
+      const an = !(S.suppAus || {})[x.id];
+      const row = h(`<div class="supp-edit"><label class="check" style="margin:0"><input type="checkbox" ${an ? 'checked' : ''}><span>${esc(x.n)}</span></label><input type="text" value="${esc(CF.suppMenge(S, x))}" placeholder="${esc(x.m)}"></div>`);
+      row.querySelector('input[type=checkbox]').onchange = e => { S.suppAus = S.suppAus || {}; if (e.target.checked) delete S.suppAus[x.id]; else S.suppAus[x.id] = true; save(); };
+      row.querySelector('input[type=text]').onchange = e => { S.suppMenge = S.suppMenge || {}; const val = e.target.value.trim(); if (val && val !== x.m) S.suppMenge[x.id] = val; else delete S.suppMenge[x.id]; save(); };
+      card.appendChild(row);
+    });
+    card.appendChild(h(`<div class="hint">Menge leer lassen = Richtwert. Änderungen werden sofort gespeichert.</div>`));
+    v.appendChild(card);
+  }
+  if (s !== today()) { const b = h(`<button class="btn light" style="margin-top:10px">Zu heute</button>`); b.onclick = () => { suppDate = today(); render(); }; v.appendChild(b); }
 }
 
 // ----- Einstellungen -----

@@ -202,7 +202,7 @@ const DAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 const DAYS_LONG = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
 
 const DEFAULT = { name: 'Celina', startDate: null, swimMin: 60, stepStart: 30, stepPlus: 5, stepMax: 60,
-  holdWeeks: [], weights: [], sessions: [], checks: {}, overrides: {}, gear: {}, cardioDev: {}, lastDev: 'step', essen: {}, dauer: 30, updatedAt: 0 };
+  holdWeeks: [], weights: [], sessions: [], checks: {}, overrides: {}, gear: {}, cardioDev: {}, lastDev: 'step', essen: {}, dauer: 30, supps: {}, suppAus: { zink: true }, suppMenge: {}, updatedAt: 0 };
 
 // ---------- Datum ----------
 function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
@@ -239,11 +239,36 @@ function kcalEst(kg, type, min, dev) {
 }
 // Essensplan: Tag 0–13 im 14-Tage-Plan (Woche A = Tag 1–7, Woche B = Tag 8–14)
 function essenTag(startDate, s) { const w = weekNo(startDate, s); if (w < 1) return 0; return ((w - 1) * 7 + wdIdx(s)) % 14; }
+
+// ---------- Supplemente (besprochen am 14.11.2026) ----------
+// zeit: morgens | mittags | vor (vor dem Training) | nach (nach dem Training) | abends
+const SUPP_ZEITEN = [['morgens', 'Morgens zum Frühstück'], ['mittags', 'Mittags'], ['vor', '30–60 min vor dem Training'], ['nach', 'Nach dem Training'], ['abends', 'Abends']];
+const SUPPS = [
+  { id: 'kreatin', n: 'Kreatin (Monohydrat)', m: '5 g', zeit: 'morgens', info: 'Mehr Kraft und Leistung, jeden Tag nehmen, auch an Ruhetagen.', hinweis: 'Bindet 1–2 kg Wasser in den Muskeln. Das ist kein Fett, beim Gewichts-Check daran denken.' },
+  { id: 'vitd', n: 'Vitamin D3 + K2', m: '1000–2000 IE', zeit: 'morgens', info: 'Knochen, Muskeln, Immunsystem. Von Oktober bis März besonders wichtig.', hinweis: 'Zum Essen nehmen, Vitamin D braucht etwas Fett.' },
+  { id: 'omega3', n: 'Omega-3 (EPA/DHA)', m: '1–2 g', zeit: 'morgens', info: 'Regeneration, Herz, weniger Entzündungen.', hinweis: 'An Tagen mit fettem Fisch (z. B. Lachs) nicht nötig.' },
+  { id: 'calcium', n: 'Calcium', m: '500 mg', zeit: 'mittags', info: 'Knochen. Bedarf ca. 1000 mg am Tag, am besten übers Essen.', hinweis: 'Nur nötig, wenn wenig Milchprodukte gegessen werden. Max. 500 mg auf einmal.' },
+  { id: 'citrullin', n: 'L-Citrullin', m: '6 g (Malat: 8 g)', zeit: 'vor', training: true, info: 'Bessere Durchblutung, weniger Ermüdung im Training.' },
+  { id: 'arginin', n: 'L-Arginin', m: '3 g', zeit: 'vor', training: true, info: 'Ähnlich wie Citrullin, wirkt aber schwächer.', hinweis: 'Bei Blutdruck-Medikamenten vorher Arzt fragen.' },
+  { id: 'koffein', n: 'Koffein (Teein)', m: '100–200 mg', zeit: 'vor', training: true, info: 'Wacher, mehr Leistung im Training.', hinweis: 'Nicht nach 15 Uhr, sonst leidet der Schlaf. Kaffee zählt mit.' },
+  { id: 'theanin', n: 'L-Theanin', m: '100–200 mg', zeit: 'vor', training: true, info: 'Aus grünem Tee. Beruhigt und macht konzentriert, zusammen mit Koffein weniger nervös.' },
+  { id: 'carnitin', n: 'L-Carnitin', m: '1–2 g', zeit: 'vor', training: true, info: 'Wird für Fettabbau und Regeneration genommen.', hinweis: 'Die Wirkung ist nur schwach belegt.' },
+  { id: 'eiweiss', n: 'Eiweißshake', m: '30 g', zeit: 'nach', training: true, info: 'Ziel ca. 1,6 g Eiweiß pro kg Körpergewicht am Tag.', hinweis: 'Ist der Shake im Essensplan schon dran, zählt er hier mit.' },
+  { id: 'magnesium', n: 'Magnesium (Citrat/Glycinat)', m: '300 mg', zeit: 'abends', info: 'Muskeln, gegen Krämpfe, besserer Schlaf.', hinweis: 'Mehr als 300 mg extra kann Durchfall machen.' },
+  { id: 'zink', n: 'Zink', m: '10 mg', zeit: 'abends', info: 'Immunsystem und Regeneration.', hinweis: 'Wer Fleisch isst, braucht es meist nicht. Darum standardmäßig aus.' }
+];
+// Trainingstag = alles ausser Regeneration (Kraft, Schwimmen, Cardio)
+function istTrainingstag(S, s) { return planKey(S, s) !== 'rest'; }
+function suppsFor(S, s) {
+  const tr = istTrainingstag(S, s);
+  return SUPPS.filter(x => !(S.suppAus || {})[x.id] && (!x.training || tr));
+}
+function suppMenge(S, x) { return (S.suppMenge || {})[x.id] || x.m; }
 // Sicherung: neuerer Stand gewinnt
 function newerState(a, b) { return ((b && b.updatedAt) || 0) > ((a && a.updatedAt) || 0) ? b : a; }
 function sumKm(sessions, type) { return Math.round(sessions.filter(x => x.type === type).reduce((a, x) => a + (x.km || 0), 0) * 10) / 10; }
 
 root.CF = { MET, DEVICES, WORKOUTS, EXTRA, DAUER_STUFEN, extraCount, exercisesFor, SPECIAL, PLAN_A, PLAN_B, DAYS, DAYS_LONG, DEFAULT,
   iso, fromIso, addDays, wdIdx, mondayOf, fmt, fmtLong, weekNo, planLetter, planKey, infoOf, imgOf, gearOf, stepMinutes, devOf,
-  sessionOf, lastWeight, weightThisWeek, kcalEst, newerState, sumKm, essenTag };
+  sessionOf, lastWeight, weightThisWeek, kcalEst, newerState, sumKm, essenTag, SUPPS, SUPP_ZEITEN, suppsFor, suppMenge, istTrainingstag };
 })(typeof module !== 'undefined' && module.exports ? module.exports : window);

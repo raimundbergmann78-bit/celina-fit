@@ -181,3 +181,13 @@ img.poster { width: 100%; border-radius: 12px; margin-top: 10px; border: 1px sol
 .pos-reihe figure { margin: 0; text-align: center; }
 .pos-reihe img { max-height: 34vh !important; width: auto; max-width: 100%; }
 .pos-reihe figcaption { color: var(--blue); font-size: 13px; font-weight: 700; margin-top: 4px; }
+
+/* Supplemente */
+.supp-row { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.supp-row:first-of-type { border-top: 0; }
+.supp-name { font-weight: 700; font-size: 15px; }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--blue); font-size: 13px; text-decoration: underline; cursor: pointer; }
+.supp-edit { display: flex; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+.supp-edit label { flex: 1; font-size: 14px; }
+.supp-edit input[type=text] { width: 120px; font-size: 14px; padding: 8px; }
+#nav button { font-size: 8.5px; letter-spacing: .3px; }
