@@ -67,8 +67,21 @@ function openModal(html, { closable = true, full = false } = {}) {
   m.onclick = e => { if ((e.target === m || full) && closable) closeModal(); };
 }
 function closeModal() { $('#modal').hidden = true; }
-function lightbox(src, name, reps, how) {
-  openModal(`<img src="${src}" alt=""><div class="ex-name">${esc(name)}</div><div class="ex-sub">${esc(reps)}</div>${how ? `<div class="ex-how">${esc(how)}</div>` : ''}<div class="hint center" style="margin-top:12px">Tippen zum Schließen</div>`, { full: true });
+function lightbox(src, name, reps, how, pos) {
+  const bilder = pos && pos.length > 1
+    ? `<div class="pos-reihe">${pos.map((p, i) => `<figure><img src="${p}" alt=""><figcaption>Position ${i + 1}</figcaption></figure>`).join('')}</div>`
+    : `<img src="${src}" alt="">`;
+  openModal(`${bilder}<div class="ex-name">${esc(name)}</div><div class="ex-sub">${esc(reps)}</div>${how ? `<div class="ex-how">${esc(how)}</div>` : ''}<div class="hint center" style="margin-top:12px">Tippen zum Schließen</div>`, { full: true });
+}
+// Positionen 1-2-3 wechseln automatisch wie eine kleine Animation
+function posWechsel(imgEl, dotsEl, pos) {
+  let i = 0;
+  const iv = setInterval(() => {
+    if (!document.body.contains(imgEl)) { clearInterval(iv); return; }
+    i = (i + 1) % pos.length; imgEl.src = pos[i];
+    dotsEl.querySelectorAll('span').forEach((d, k) => d.classList.toggle('on', k === i));
+  }, 1400);
+  timers.push(iv);
 }
 
 // ---------- Ansichten ----------
@@ -130,8 +143,10 @@ function renderWorkout(v, card, s, key, info) {
     const useBand = gear === 'band' && e.band, name = useBand ? e.band.n : e.n, reps = `${e.s} × ${e.r}${key === 'cardio' && ei < 5 ? ' (je Runde)' : ''}`;
     const img = e.img || imgOf(key, ei);
     const el = h(`<div class="ex"></div>`);
-    const wrap = h(`<div class="exwrap"><img class="eximg" src="${img}" alt="${esc(e.n)}" loading="lazy">${useBand ? '<span class="badge">🟣 mit Gummiband</span>' : ''}${ei >= 5 ? '<span class="badge extra">+ Extra</span>' : ''}<span class="zoom">⤢ größer</span></div>`);
-    wrap.onclick = () => lightbox(img, name, reps, useBand ? e.band.how : '');
+    const pos = e.pos && e.pos.length > 1 ? e.pos : null;
+    const wrap = h(`<div class="exwrap"><img class="eximg" src="${img}" alt="${esc(e.n)}" loading="lazy">${useBand ? '<span class="badge">🟣 mit Gummiband</span>' : ''}${ei >= 5 ? '<span class="badge extra">+ Extra</span>' : ''}${pos ? `<div class="pos-dots">${pos.map((_, k) => `<span class="${k === 0 ? 'on' : ''}">${k + 1}</span>`).join('')}</div>` : ''}<span class="zoom">⤢ größer</span></div>`);
+    if (pos) { pos.slice(1).forEach(p => { const pre = new Image(); pre.src = p; }); posWechsel(wrap.querySelector('.eximg'), wrap.querySelector('.pos-dots'), pos); }
+    wrap.onclick = () => lightbox(img, name, reps, useBand ? e.band.how : '', pos);
     el.appendChild(wrap);
     el.appendChild(h(`<div class="ex-name">${esc(name)}</div>`));
     el.appendChild(h(`<div class="ex-sub">${esc(reps)}</div>`));

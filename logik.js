@@ -138,8 +138,36 @@ const EXTRA = {
   inchworm: { n: 'Inchworm', s: 3, r: '6', img: 'uebungen/extra_inchworm.jpg' },
   plank_taps: { n: 'Plank Shoulder Taps', s: 3, r: '20', img: 'uebungen/extra_plank_taps.jpg' },
   reverse_lunge: { n: 'Reverse Lunge', s: 3, r: '8 je Bein', img: 'uebungen/glute_1.jpg' },
-  donkey_kick: { n: 'Donkey Kick', s: 3, r: '12 je Seite', img: 'uebungen/glute_3.jpg' }
+  donkey_kick: { n: 'Donkey Kick', s: 3, r: '12 je Seite', img: 'uebungen/glute_3.jpg' },
+  // Ball-Uebungen mit Positionen (aus Celinas Fotos, 14.11.2026)
+  core_sequence: { n: 'Core-Abfolge mit Ball', s: 3, r: '6 je Seite', pos: posBilder('core_sequence', 4) },
+  reverse_crunch_ball: { n: 'Reverse Crunch mit Ball', s: 3, r: '12', pos: posBilder('reverse_crunch_ball', 2) },
+  single_leg_raise: { n: 'Single Leg Raise mit Ball', s: 3, r: '10 je Bein', pos: posBilder('single_leg_raise', 2) },
+  leg_lowering: { n: 'Beine senken mit Ball', s: 3, r: '10', pos: posBilder('leg_lowering', 2) }
 };
+function posBilder(name, n) { const a = []; for (let i = 1; i <= n; i++) a.push('uebungen/pos/' + name + '_' + i + '.jpg'); return a; }
+Object.values(EXTRA).forEach(e => { if (e.pos && !e.img) e.img = e.pos[0]; });
+
+// ---------- Neue Workouts aus Celinas Fotos (Joker, ueber „Anderes Workout“) ----------
+WORKOUTS.ball = { name: 'Core mit Ball', sub: 'Bauch, kleiner Ball unter dem Becken', poster: 'uebungen/pos/poster_ball.jpg', rest: 45, type: 'kraft',
+  tips: ['Ball unter dem Kreuzbein', 'Unterer Rücken bleibt am Ball', 'Langsam absenken'],
+  ex: [
+    { n: 'Leg Drop Crunch', s: 3, r: '10', pos: posBilder('leg_drop_crunch', 2) },
+    { n: 'Beinstrecken im Wechsel', s: 3, r: '10 je Seite', pos: posBilder('alt_leg_extension', 3) },
+    { n: 'Block-Übergabe', s: 3, r: '10', pos: posBilder('block_pass', 2) },
+    { n: 'Reverse Crunch mit Block', s: 3, r: '12', pos: posBilder('block_reverse_crunch', 2) },
+    { n: 'Beinschere', s: 3, r: '20 (10 je Seite)', pos: posBilder('scissors', 2) }
+  ] };
+WORKOUTS.band = { name: 'Band Po-Workout', sub: 'Po & Beine mit Miniband', poster: 'uebungen/pos/poster_band.jpg', rest: 60, type: 'kraft',
+  tips: ['Band immer gespannt halten', 'Knie nach außen drücken'],
+  ex: [
+    { n: 'Standing Band Kickback', s: 3, r: '15 je Bein', pos: posBilder('band_kickback', 2) },
+    { n: 'Tiefe Kniebeuge mit Band', s: 3, r: '12', pos: posBilder('band_deep_squat', 2) },
+    { n: 'Split Squat mit Band', s: 3, r: '10 je Bein', pos: posBilder('band_split_squat', 2) },
+    { n: 'Vierfüßler-Kickback mit Band', s: 3, r: '12 je Bein', pos: posBilder('quad_kickback', 2) },
+    { n: 'Squat Pulse mit Band', s: 3, r: '15', pos: posBilder('band_squat_pulse', 2) }
+  ] };
+[WORKOUTS.ball, WORKOUTS.band].forEach(w => w.ex.forEach(e => { e.img = e.pos[0]; }));
 const EXTRAS_BY_WORKOUT = {
   leg: ['sumo_squat', 'lateral_lunge', 'single_leg_bridge', 'bulgarian_split_squat', 'curtsy_lunge'],
   glute: ['fire_hydrant', 'clamshell', 'hip_thrust', 'single_leg_bridge', 'sumo_squat'],
@@ -150,7 +178,9 @@ const EXTRAS_BY_WORKOUT = {
   back: ['superman', 'renegade_row', 'pullover', 'upright_row', 'shrugs'],
   arms: ['front_raise', 'arnold_press', 'overhead_triceps', 'concentration_curl', 'upright_row'],
   cardio: ['butt_kicks', 'skater_steps', 'squat_punch', 'inchworm', 'plank_taps'],
-  full: ['knee_pushup', 'sumo_squat', 'renegade_row', 'mountain_climbers', 'russian_twist']
+  full: ['knee_pushup', 'sumo_squat', 'renegade_row', 'mountain_climbers', 'russian_twist'],
+  ball: ['core_sequence', 'reverse_crunch_ball', 'single_leg_raise', 'leg_lowering', 'hollow_hold'],
+  band: ['fire_hydrant', 'clamshell', 'hip_thrust', 'single_leg_bridge', 'lateral_lunge']
 };
 Object.keys(EXTRAS_BY_WORKOUT).forEach(k => { WORKOUTS[k].extra = EXTRAS_BY_WORKOUT[k]; });
 // Trainingsdauer: 30 min = 5 Uebungen, 40 = 7, 50 = 8, 60 = 10
