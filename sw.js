@@ -1,7 +1,7 @@
 /* Service Worker: macht die App offline nutzbar.
    Mit Internet: immer die neueste Datei laden (Updates kommen automatisch).
    Ohne Internet: aus dem Zwischenspeicher. */
-const CACHE = 'celinafit-v20';
+const CACHE = 'celinafit-v21';
 const FILES = [
   './', './index.html', './style.css', './cf.min.js', './manifest.webmanifest',
   './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png', './icons/splash.jpg',
